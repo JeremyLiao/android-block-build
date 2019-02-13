@@ -1,0 +1,14 @@
+import org.gradle.internal.jvm.Jvm
+
+apply plugin: 'java'
+
+dependencies {
+    implementation 'com.google.auto.service:auto-service:1.0-rc4'
+    implementation 'com.squareup:javapoet:1.11.1'
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation project(':block-components:blockbase')
+    implementation project(':block-components:blockcommon')
+}
+
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"

@@ -1,0 +1,11 @@
+include ':app'
+
+include ':modules:modulea'
+include ':modules:moduleb'
+include ':modules:modulec'
+
+include ':block-components:blockbase'
+include ':block-components:blockcore'
+include ':block-components:blockcompiler'
+include ':block-components:blockplugin'
+include ':block-components:blockcommon'
