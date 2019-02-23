@@ -8,10 +8,12 @@ import com.jeremyliao.modulea.export.bean.DemoBean;
 /**
  * Created by liaohailiang on 2019/1/24.
  */
-@InterfaceExport(name = "modulea", impl = ModuleAInterfaceImpl.class)
+@InterfaceExport(module = "modulea", impl = ModuleAInterfaceImpl.class, version = 2)
 public interface ModuleAInterface {
 
     void enterMain(Activity activity);
+
+    void enterGoodsPage(Activity activity);
 
     String getValue(int type);
 

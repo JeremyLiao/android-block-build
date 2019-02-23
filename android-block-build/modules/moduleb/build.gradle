@@ -1,8 +1,13 @@
+ext {
+    assemble_dependencies = false
+}
+
 apply plugin: 'block-plugin'
 
 Block {
-    packageName = 'com.jeremyliao.moduleb'
+    module = 'moduleb'
     dependencies = {
+//        implementation 'com.jeremyliao:modulea:0.0.1'
         implementation project(':modules:modulea')
     }
 }
@@ -30,6 +35,8 @@ android {
     sourceSets {
         main {
             java.srcDirs = ['src/main/java', 'src-gen/main/java']
+            assets.srcDirs = ['src/main/assets', 'src-gen/main/assets']
+            resources.srcDirs = ['src-gen/main/resources']
         }
     }
 
@@ -43,7 +50,16 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
-    implementation project(':block-components:blockbase')
-    implementation project(':block-components:blockcore')
-    annotationProcessor project(':block-components:blockcompiler')
+    if (using_aar) {
+        implementation 'com.jeremyliao:blockbase:0.0.1'
+//        implementation 'com.jeremyliao:blockcore:0.0.1'
+        implementation project(':block-components:blockcore')
+        annotationProcessor 'com.jeremyliao:blockcompiler:0.0.1'
+    } else {
+        implementation project(':block-components:blockbase')
+        implementation project(':block-components:blockcore')
+        annotationProcessor project(':block-components:blockcompiler')
+    }
 }
+
+apply from: '../../upload.gradle'

@@ -6,8 +6,8 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.jeremyliao.moduleb.R;
-import com.jeremyliao.moduleb.apicenter.ApiCenter;
-import com.jeremyliao.moduleb.apicenter.inner.bean.modulea.DemoBean;
+import com.moduleb.apicenter.ApiCenter;
+import com.moduleb.apicenter.inner.bean.modulea.DemoBean;
 
 
 public class ModuleBActivity extends AppCompatActivity {
@@ -19,7 +19,7 @@ public class ModuleBActivity extends AppCompatActivity {
     }
 
     public void onTest1(View v) {
-        ApiCenter.get().modulea().enterMain(this);
+        ApiCenter.get().modulea().enterGoodsPage(this);
     }
 
     public void onTest2(View v) {

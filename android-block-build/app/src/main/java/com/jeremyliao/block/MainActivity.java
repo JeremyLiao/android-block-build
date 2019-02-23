@@ -12,10 +12,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-    }
-
-    public void testApiCenter(View v) {
-        startActivity(new Intent(this, ModuleBActivity.class));
+        startActivity(new Intent(this,
+                com.jeremyliao.modulea.activity.MainActivity.class));
+        finish();
     }
 }

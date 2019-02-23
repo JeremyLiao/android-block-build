@@ -111,7 +111,7 @@ public class BlockAnnotationProcessor extends AbstractProcessor {
                 TypeElement typeElement = (TypeElement) element;
                 InterfaceExport interfaceExport = typeElement.getAnnotation(InterfaceExport.class);
                 String interfaceClassName = typeElement.getSimpleName().toString();
-                String moduleName = interfaceExport.name();
+                String moduleName = interfaceExport.module();
                 if (moduleName.length() == 0) {
                     PackageElement packageElement = elements.getPackageOf(element);
                     moduleName = packageElement.getQualifiedName().toString();
@@ -119,6 +119,7 @@ public class BlockAnnotationProcessor extends AbstractProcessor {
                 System.out.println(TAG + "moduleName: " + moduleName);
                 InterfaceInfo interfaceInfo = new InterfaceInfo();
                 interfaceInfo.setModule(moduleName);
+                interfaceInfo.setVersion(interfaceExport.version());
                 interfaceInfo.setInterfaceName(interfaceClassName);
                 interfaceInfo.setImplementClassName(getImpl(interfaceExport));
                 List<? extends Element> enclosedElements = typeElement.getEnclosedElements();

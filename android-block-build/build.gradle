@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    
+
     repositories {
         maven {
             url uri('./repo')
@@ -11,7 +11,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.2.1'
-        classpath "com.jeremyliao:blockplugin:0.0.2"
+        classpath "com.jeremyliao:blockplugin:0.0.1"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -20,6 +20,9 @@ buildscript {
 
 allprojects {
     repositories {
+        maven {
+            url uri('/Users/hailiangliao/Develop/git/android-block-build/android-block-build/repo')
+        }
         google()
         jcenter()
     }
@@ -27,4 +30,8 @@ allprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+ext {
+    using_aar = true
 }

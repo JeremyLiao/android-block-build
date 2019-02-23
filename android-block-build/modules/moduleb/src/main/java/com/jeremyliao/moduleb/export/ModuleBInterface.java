@@ -7,7 +7,7 @@ import com.jeremyliao.blockbase.annotation.InterfaceExport;
 /**
  * Created by liaohailiang on 2019/1/24.
  */
-@InterfaceExport(name = "moduleb", impl = ModuleBInterfaceImpl.class)
+@InterfaceExport(module = "moduleb", impl = ModuleBInterfaceImpl.class)
 public interface ModuleBInterface {
 
     void enterMain(Activity activity);

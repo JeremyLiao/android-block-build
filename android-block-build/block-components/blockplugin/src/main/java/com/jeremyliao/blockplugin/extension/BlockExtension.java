@@ -7,15 +7,15 @@ import groovy.lang.Closure;
  */
 public class BlockExtension {
 
-    private String packageName;
+    private String module;
     private Closure dependencies;
 
-    public String getPackageName() {
-        return packageName;
+    public String getModule() {
+        return module;
     }
 
-    public void setPackageName(String packageName) {
-        this.packageName = packageName;
+    public void setModule(String module) {
+        this.module = module;
     }
 
     public Closure getDependencies() {

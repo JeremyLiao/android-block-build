@@ -3,6 +3,7 @@ package com.jeremyliao.modulea.export;
 import android.app.Activity;
 import android.content.Intent;
 
+import com.jeremyliao.modulea.activity.GoodsActivity;
 import com.jeremyliao.modulea.activity.MainActivity;
 import com.jeremyliao.modulea.export.bean.DemoBean;
 import com.jeremyliao.modulea.export.bean.DemoOutBean;
@@ -20,6 +21,14 @@ public class ModuleAInterfaceImpl implements ModuleAInterface {
             return;
         }
         activity.startActivity(new Intent(activity, MainActivity.class));
+    }
+
+    @Override
+    public void enterGoodsPage(Activity activity) {
+        if (activity == null) {
+            return;
+        }
+        activity.startActivity(new Intent(activity, GoodsActivity.class));
     }
 
     @Override

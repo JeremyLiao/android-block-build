@@ -28,12 +28,17 @@ dependencies {
     compile 'com.android.tools.build:gradle:3.1.2'
     compile 'com.android.tools.build:transform-api:1.5.0'
     implementation 'com.google.code.gson:gson:2.8.5'
-//    implementation 'commons-io:commons-io:2.6'
+    if (using_aar) {
+        implementation 'com.jeremyliao:blockcommon:0.0.1'
+    } else {
+        implementation project(':block-components:blockcommon')
+    }
 }
+
 
 //group和version
 group = 'com.jeremyliao'
-version = '0.0.2'
+version = '0.0.1'
 
 //打包到本地或者远程Maven库
 uploadArchives {

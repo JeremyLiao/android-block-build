@@ -46,5 +46,21 @@ public class BeanInfo {
         public void setReturnType(String returnType) {
             this.returnType = returnType;
         }
+
+        @Override
+        public String toString() {
+            StringBuffer sb = new StringBuffer();
+            sb.append("name: ").append(name).append(";");
+            sb.append("returnType: ").append(returnType).append(";");
+            return sb.toString();
+        }
+    }
+
+    @Override
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("className: ").append(className).append(";");
+        sb.append("fieldInfos: ").append(fieldInfos).append(";");
+        return sb.toString();
     }
 }

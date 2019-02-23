@@ -12,7 +12,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface InterfaceExport {
 
-    String name();
+    String module();
 
     Class impl();
+
+    int version() default 0;
 }

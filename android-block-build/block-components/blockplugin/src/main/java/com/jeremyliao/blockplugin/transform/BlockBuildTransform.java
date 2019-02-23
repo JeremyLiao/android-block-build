@@ -10,15 +10,18 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
 import com.google.gson.Gson;
-import com.jeremyliao.blockplugin.bean.BeanInfo;
-import com.jeremyliao.blockplugin.bean.BeanInfo.*;
-import com.jeremyliao.blockplugin.bean.CompileInfo;
-import com.jeremyliao.blockplugin.bean.MessageInfo;
-import com.jeremyliao.blockplugin.bean.MessageInfo.*;
-import com.jeremyliao.blockplugin.bean.RuntimeInfo;
-import com.jeremyliao.blockplugin.bean.InterfaceInfo;
-import com.jeremyliao.blockplugin.bean.InterfaceInfo.*;
+
+import com.jeremyliao.blockcommon.bean.CompileInfo;
+import com.jeremyliao.blockcommon.bean.MessageInfo;
+import com.jeremyliao.blockcommon.bean.MessageInfo.*;
+import com.jeremyliao.blockcommon.bean.RuntimeInfo;
+import com.jeremyliao.blockcommon.bean.BeanInfo;
+import com.jeremyliao.blockcommon.bean.BeanInfo.*;
+import com.jeremyliao.blockcommon.bean.InterfaceInfo;
+import com.jeremyliao.blockcommon.bean.InterfaceInfo.*;
+import com.jeremyliao.blockcommon.bean.VersionInfo;
 import com.jeremyliao.blockplugin.extension.BlockExtension;
+import com.jeremyliao.blockplugin.utils.GradleUtils;
 import com.jeremyliao.blockplugin.utils.ZipUtils;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -29,14 +32,9 @@ import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 
 import org.gradle.api.Project;
-import org.gradle.internal.impldep.bsh.commands.dir;
 
-import java.io.BufferedReader;
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.util.Enumeration;
@@ -54,8 +52,9 @@ import javax.lang.model.element.Modifier;
  */
 public class BlockBuildTransform extends Transform {
 
-    private static final String TAG = "[BlockPlugin]";
+    private static final String TAG = "[BlockBuildTransform]";
     private static final String EXPORT_INFO_PATH = "META-INF/block/export/";
+    private static final String VERSION_INFO_PATH = "META-INF/block/version/";
     private static final String ASSETS_PATH = "block/";
     private static final String ASSETS_IMPL_FILE = "impl_info.json";
     private static final String API_MANAGER_CLASS_NAME = "com.jeremyliao.blockcore.ApiManager";
@@ -67,6 +66,7 @@ public class BlockBuildTransform extends Transform {
     private Map<String, String> oriToNewBeanMap = new HashMap<>();
     private Map<String, String> newToOriBeanMap = new HashMap<>();
     private RuntimeInfo runtimeInfo = new RuntimeInfo();
+    private VersionInfo versionInfo = new VersionInfo();
 
     public BlockBuildTransform(Project project, BlockExtension extension) {
         this.project = project;
@@ -97,8 +97,11 @@ public class BlockBuildTransform extends Transform {
     public void transform(TransformInvocation transformInvocation) throws TransformException, InterruptedException, IOException {
         super.transform(transformInvocation);
         System.out.println(TAG + "start transform");
+        versionInfo.setModule(extension.getModule());
+        clean();
         scanning(transformInvocation);
         output();
+        writeVersionInfo();
     }
 
     private void scanning(TransformInvocation transformInvocation) throws IOException {
@@ -110,20 +113,21 @@ public class BlockBuildTransform extends Transform {
                 while (entries.hasMoreElements()) {
                     JarEntry entry = entries.nextElement();
                     if (isExportInfoEntry(entry)) {
-                        System.out.println(TAG + "JarEntry: " + entry);
                         System.out.println(TAG + "entry name: " + entry.getName());
                         String moduleName = getSuffix(entry.getName(), "/");
                         System.out.println(TAG + "moduleName: " + moduleName);
-                        String content = getContent(jarFile, entry);
+                        String content = GradleUtils.getContent(jarFile, entry);
                         System.out.println(TAG + "content: " + content);
-                        if (!compileInfoMap.containsKey(moduleName)) {
+                        if (!moduleName.equals(extension.getModule()) && !compileInfoMap.containsKey(moduleName)) {
                             CompileInfo compileInfo = gson.fromJson(content, CompileInfo.class);
                             compileInfoMap.put(moduleName, compileInfo);
+                            versionInfo.getVersionMap().put(moduleName, compileInfo.getInterfaceInfo().getVersion());
                             runtimeInfo.getInfoMap().put(lowerCaseFirstLetter(compileInfo.getModule()),
                                     RuntimeInfo.createInfo(
                                             compileInfo.getModule(),
                                             getInterfaceCompleteClassName(compileInfo.getInterfaceInfo()),
-                                            compileInfo.getInterfaceInfo().getImplementClassName()));
+                                            compileInfo.getInterfaceInfo().getImplementClassName(),
+                                            compileInfo.getInterfaceInfo().getVersion()));
                         }
                     }
                 }
@@ -131,18 +135,27 @@ public class BlockBuildTransform extends Transform {
         }
     }
 
-    private void output() {
-        File mainPath = new File(getSourcePath());
-        System.out.println(TAG + "mainPath: " + mainPath.getAbsolutePath());
+    private void clean() {
+        cleanDirectory(getSourcePath());
+        cleanDirectory(getAssetsPath());
+        cleanDirectory(getResourcesPath());
+    }
+
+    private void cleanDirectory(String path) {
+        File file = new File(path);
         try {
-            if (!mainPath.exists()) {
-                mainPath.mkdirs();
+            if (!file.exists()) {
+                file.mkdirs();
             } else {
-                FileUtils.deleteDirectoryContents(mainPath);
+                FileUtils.deleteDirectoryContents(file);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void output() {
+        File mainPath = new File(getSourcePath());
         if (compileInfoMap.size() > 0) {
             for (CompileInfo compileInfo : compileInfoMap.values()) {
                 generateBeanClass(mainPath, compileInfo);
@@ -156,8 +169,29 @@ public class BlockBuildTransform extends Transform {
 //            generateMessageCenterClass(mainPath);
         }
         runtimeInfo.setNewToOriBeanMap(newToOriBeanMap);
-        runtimeInfo.setOriToNewBeanMap(oriToNewBeanMap);
+//        runtimeInfo.setOriToNewBeanMap(oriToNewBeanMap);
         writeToAssets();
+    }
+
+    private void writeVersionInfo() {
+        File dir = new File(getResourcesPath(), VERSION_INFO_PATH);
+        if (dir.isFile()) {
+            dir.delete();
+        }
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        File file = new File(dir, extension.getModule());
+        PrintWriter writer = null;
+        try {
+            writer = new PrintWriter(file);
+            writer.write(gson.toJson(versionInfo));
+            writer.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            GradleUtils.safeClose(writer);
+        }
     }
 
     private void generateApiCenterClass(File mainPath) {
@@ -167,7 +201,7 @@ public class BlockBuildTransform extends Transform {
                 .addJavadoc("Auto generate code, do not modify!!!");
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("get")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
-        String returnTypeStr = extension.getPackageName() + ".apicenter.inner." + "GlobalApi";
+        String returnTypeStr = getRootPackage() + ".apicenter.inner." + "GlobalApi";
         Type returnType = getType(returnTypeStr);
         if (returnType != null) {
             methodBuilder.returns(returnType);
@@ -178,7 +212,7 @@ public class BlockBuildTransform extends Transform {
                 .addStatement("return $L.get().convert($L.class)", API_MANAGER_CLASS_NAME, returnTypeStr)
                 .build());
         builder.addMethod(methodBuilder.build());
-        String packageName = extension.getPackageName() + ".apicenter";
+        String packageName = getRootPackage() + ".apicenter";
         System.out.println(TAG + "packageName: " + packageName);
         try {
             JavaFile.builder(packageName, builder.build())
@@ -196,7 +230,7 @@ public class BlockBuildTransform extends Transform {
                 .addJavadoc("Auto generate code, do not modify!!!");
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("get")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
-        String returnTypeStr = extension.getPackageName() + ".apicenter.inner." + "GlobalMessage";
+        String returnTypeStr = getRootPackage() + ".apicenter.inner." + "GlobalMessage";
         Type returnType = getType(returnTypeStr);
         if (returnType != null) {
             methodBuilder.returns(returnType);
@@ -207,7 +241,7 @@ public class BlockBuildTransform extends Transform {
                 .addStatement("return $L.get().convert($L.class)", API_MANAGER_CLASS_NAME, returnTypeStr)
                 .build());
         builder.addMethod(methodBuilder.build());
-        String packageName = extension.getPackageName() + ".apicenter";
+        String packageName = getRootPackage() + ".apicenter";
         System.out.println(TAG + "packageName: " + packageName);
         try {
             JavaFile.builder(packageName, builder.build())
@@ -238,7 +272,7 @@ public class BlockBuildTransform extends Transform {
             }
             builder.addMethod(methodBuilder.build());
         }
-        String packageName = extension.getPackageName() + ".apicenter.inner";
+        String packageName = getRootPackage() + ".apicenter.inner";
         System.out.println(TAG + "packageName: " + packageName);
         try {
             JavaFile.builder(packageName, builder.build())
@@ -268,7 +302,7 @@ public class BlockBuildTransform extends Transform {
             }
             builder.addMethod(methodBuilder.build());
         }
-        String packageName = extension.getPackageName() + ".apicenter.inner";
+        String packageName = getRootPackage() + ".apicenter.inner";
         System.out.println(TAG + "packageName: " + packageName);
         try {
             JavaFile.builder(packageName, builder.build())
@@ -326,7 +360,7 @@ public class BlockBuildTransform extends Transform {
                 builder.addMethod(methodBuilder.build());
             }
         }
-        String packageName = extension.getPackageName()
+        String packageName = getRootPackage()
                 + ".apicenter.inner.api."
                 + interfaceInfo.getModule().toLowerCase();
         System.out.println(TAG + "packageName: " + packageName);
@@ -347,7 +381,7 @@ public class BlockBuildTransform extends Transform {
         if (beanInfos == null || beanInfos.size() == 0) {
             return;
         }
-        String packageName = extension.getPackageName()
+        String packageName = getRootPackage()
                 + ".apicenter.inner.bean."
                 + compileInfo.getModule().toLowerCase();
         System.out.println(TAG + "packageName: " + packageName);
@@ -419,7 +453,7 @@ public class BlockBuildTransform extends Transform {
                 builder.addMethod(methodBuilder.build());
             }
         }
-        String packageName = extension.getPackageName() + ".apicenter.inner.message";
+        String packageName = getRootPackage() + ".apicenter.inner.message";
         System.out.println(TAG + "packageName: " + packageName);
         try {
             JavaFile.builder(packageName, builder.build())
@@ -431,7 +465,7 @@ public class BlockBuildTransform extends Transform {
     }
 
     private void writeToAssets() {
-        File assetsDir = new File(getAssetsPath(), ASSETS_PATH);
+        File assetsDir = new File(getAssetsPath(), ASSETS_PATH + extension.getModule());
         if (assetsDir.isFile()) {
             assetsDir.delete();
         }
@@ -447,7 +481,7 @@ public class BlockBuildTransform extends Transform {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            safeClose(writer);
+            GradleUtils.safeClose(writer);
         }
     }
 
@@ -481,7 +515,7 @@ public class BlockBuildTransform extends Transform {
     }
 
     private String getInterfaceCompleteClassName(InterfaceInfo interfaceInfo) {
-        return extension.getPackageName()
+        return getRootPackage()
                 + ".apicenter.inner.api."
                 + interfaceInfo.getModule().toLowerCase()
                 + "."
@@ -489,7 +523,7 @@ public class BlockBuildTransform extends Transform {
     }
 
     private String getMessageInterfaceCompleteClassName(String name) {
-        return extension.getPackageName()
+        return getRootPackage()
                 + ".apicenter.inner.message."
                 + getMessageClassName(name);
     }
@@ -516,35 +550,21 @@ public class BlockBuildTransform extends Transform {
         return name.substring(0, 1).toLowerCase() + name.substring(1);
     }
 
-    private String getSourcePath() {
+    private String getMainPath() {
         return FileUtils.join(getModuleRootDir().getAbsolutePath(),
-                "src-gen", "main", "java");
+                "src-gen", "main");
+    }
+
+    private String getSourcePath() {
+        return FileUtils.join(getMainPath(), "java");
     }
 
     private String getAssetsPath() {
-        return FileUtils.join(getModuleRootDir().getAbsolutePath(),
-                "src", "main", "assets");
+        return FileUtils.join(getMainPath(), "assets");
     }
 
-    private String getContent(JarFile jarFile, JarEntry entry) {
-        InputStream is = null;
-        BufferedReader reader = null;
-        try {
-            is = jarFile.getInputStream(entry);
-            reader = new BufferedReader(new InputStreamReader(is));
-            StringBuffer stringBuffer = new StringBuffer();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                stringBuffer.append(line);
-            }
-            return stringBuffer.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            safeClose(reader);
-            safeClose(is);
-        }
-        return null;
+    private String getResourcesPath() {
+        return FileUtils.join(getMainPath(), "resources");
     }
 
     private File getModuleRootDir() {
@@ -557,6 +577,10 @@ public class BlockBuildTransform extends Transform {
                 "source",
                 "apt",
                 "debug");
+    }
+
+    private String getRootPackage() {
+        return "com." + extension.getModule();
     }
 
     private boolean isExportInfoEntry(JarEntry entry) {
@@ -582,16 +606,6 @@ public class BlockBuildTransform extends Transform {
             return s;
         } else {
             return s.substring(i + splitter.length());
-        }
-    }
-
-    private void safeClose(Closeable closeable) {
-        if (closeable != null) {
-            try {
-                closeable.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 }

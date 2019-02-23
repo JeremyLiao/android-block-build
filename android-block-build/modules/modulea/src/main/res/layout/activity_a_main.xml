@@ -11,6 +11,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="Main page of modulea"/>
+        android:text="Main page of Module A" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="toModuleBMainPage"
+        android:text="Go Module B Main" />
 
 </LinearLayout>

@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'version-check-plugin'
 
 android {
     compileSdkVersion 28
@@ -26,8 +27,22 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
-    implementation project(':modules:modulea')
-    implementation project(':modules:moduleb')
-    implementation project(':modules:modulec')
-    implementation project(':block-components:blockcore')
+    if (using_aar) {
+//        implementation 'com.jeremyliao:modulea:0.0.1'
+//        implementation 'com.jeremyliao:moduleb:0.0.1'
+//        implementation 'com.jeremyliao:modulec:0.0.1'
+        implementation project(':modules:modulea')
+        implementation project(':modules:modulec')
+        implementation project(':modules:moduleb')
+
+
+
+//        implementation 'com.jeremyliao:blockcore:0.0.1'
+        implementation project(':block-components:blockcore')
+    } else {
+        implementation project(':modules:modulea')
+        implementation project(':modules:moduleb')
+        implementation project(':modules:modulec')
+        implementation project(':block-components:blockcore')
+    }
 }

@@ -43,4 +43,14 @@ public class CompileInfo {
     public void setBeanInfos(List<BeanInfo> beanInfos) {
         this.beanInfos = beanInfos;
     }
+
+    @Override
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("module: ").append(module).append(";");
+        sb.append("interfaceInfo: ").append(interfaceInfo).append(";");
+        sb.append("messageInfo: ").append(messageInfo).append(";");
+        sb.append("beanInfos: ").append(beanInfos).append(";");
+        return sb.toString();
+    }
 }
