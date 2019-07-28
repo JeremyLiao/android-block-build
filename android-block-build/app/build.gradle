@@ -31,11 +31,10 @@ dependencies {
 //        implementation 'com.jeremyliao:modulea:0.0.1'
 //        implementation 'com.jeremyliao:moduleb:0.0.1'
 //        implementation 'com.jeremyliao:modulec:0.0.1'
+
         implementation project(':modules:modulea')
+//        implementation project(':modules:moduleb')
         implementation project(':modules:modulec')
-        implementation project(':modules:moduleb')
-
-
 
 //        implementation 'com.jeremyliao:blockcore:0.0.1'
         implementation project(':block-components:blockcore')

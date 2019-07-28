@@ -19,4 +19,16 @@
         android:onClick="toModuleBMainPage"
         android:text="Go Module B Main" />
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="testGetCommonBean"
+        android:text="Test get common bean" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="testGetCommonBean1"
+        android:text="Test pass param bean" />
+
 </LinearLayout>

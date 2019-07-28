@@ -26,6 +26,6 @@ public class VersionCheckPlugin implements Plugin<Project> {
 
     private void addTransform(Project project) {
         AppExtension appExtension = project.getExtensions().findByType(AppExtension.class);
-        appExtension.registerTransform(new VersionCheckTransform(project));
+        appExtension.registerTransform(new VersionCheckTransform());
     }
 }

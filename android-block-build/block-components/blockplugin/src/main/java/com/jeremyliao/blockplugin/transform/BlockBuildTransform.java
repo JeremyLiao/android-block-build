@@ -58,6 +58,7 @@ public class BlockBuildTransform extends Transform {
     private static final String ASSETS_PATH = "block/";
     private static final String ASSETS_IMPL_FILE = "impl_info.json";
     private static final String API_MANAGER_CLASS_NAME = "com.jeremyliao.blockcore.ApiManager";
+    private static final String REMOTE_EXCEPTION_CLASS_NAME = "com.jeremyliao.blockcore.exception.RemoteCallException";
 
     private final Project project;
     private final BlockExtension extension;
@@ -270,6 +271,7 @@ public class BlockBuildTransform extends Transform {
             } else {
                 methodBuilder.returns(TypeVariableName.get(methodReturn));
             }
+            methodBuilder.addException(TypeVariableName.get(REMOTE_EXCEPTION_CLASS_NAME));
             builder.addMethod(methodBuilder.build());
         }
         String packageName = getRootPackage() + ".apicenter.inner";
@@ -336,6 +338,7 @@ public class BlockBuildTransform extends Transform {
                 } else {
                     methodBuilder.returns(TypeVariableName.get(returnType));
                 }
+                methodBuilder.addException(TypeVariableName.get(REMOTE_EXCEPTION_CLASS_NAME));
                 List<String> params = methodInfo.getParams();
                 List<String> paramTypes = methodInfo.getParamTypes();
                 if (params != null && params.size() > 0) {

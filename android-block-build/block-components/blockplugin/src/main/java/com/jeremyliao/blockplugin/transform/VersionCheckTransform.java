@@ -1,5 +1,7 @@
 package com.jeremyliao.blockplugin.transform;
 
+import com.android.build.api.transform.DirectoryInput;
+import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Transform;
@@ -7,6 +9,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.utils.FileUtils;
 import com.google.gson.Gson;
 import com.jeremyliao.blockcommon.bean.CompileInfo;
 import com.jeremyliao.blockcommon.bean.InterfaceInfo;
@@ -34,14 +37,9 @@ public class VersionCheckTransform extends Transform {
     private static final String EXPORT_INFO_PATH = "META-INF/block/export/";
     private static final String VERSION_INFO_PATH = "META-INF/block/version/";
 
-    private final Project project;
     private Gson gson = new Gson();
     private Map<String, CompileInfo> providerInfoMap = new HashMap<>();
     private Map<String, VersionInfo> consumerInfoMap = new HashMap<>();
-
-    public VersionCheckTransform(Project project) {
-        this.project = project;
-    }
 
     @Override
     public String getName() {
@@ -66,6 +64,28 @@ public class VersionCheckTransform extends Transform {
     @Override
     public void transform(TransformInvocation transformInvocation) throws TransformException, InterruptedException, IOException {
         super.transform(transformInvocation);
+        processInput(transformInvocation);
+        checkVersion();
+        copyInputToOutput(transformInvocation);
+    }
+
+    private void copyInputToOutput(TransformInvocation transformInvocation) throws IOException {
+        for (TransformInput input : transformInvocation.getInputs()) {
+            for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
+                File dest = transformInvocation.getOutputProvider().getContentLocation(directoryInput.getName(),
+                        directoryInput.getContentTypes(), directoryInput.getScopes(), Format.DIRECTORY);
+                FileUtils.copyDirectory(directoryInput.getFile(), dest);
+            }
+            for (JarInput jarInput : input.getJarInputs()) {
+                String destName = jarInput.getName();
+                File dest = transformInvocation.getOutputProvider().getContentLocation(destName,
+                        jarInput.getContentTypes(), jarInput.getScopes(), Format.JAR);
+                FileUtils.copyFile(jarInput.getFile(), dest);
+            }
+        }
+    }
+
+    private void processInput(TransformInvocation transformInvocation) throws IOException {
         for (TransformInput input : transformInvocation.getInputs()) {
             for (JarInput jarInput : input.getJarInputs()) {
                 File file = jarInput.getFile();
@@ -85,7 +105,6 @@ public class VersionCheckTransform extends Transform {
                 }
             }
         }
-        checkVersion();
     }
 
     private void checkVersion() {

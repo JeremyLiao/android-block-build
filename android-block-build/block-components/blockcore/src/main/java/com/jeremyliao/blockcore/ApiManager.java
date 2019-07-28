@@ -6,6 +6,7 @@ import android.util.Pair;
 
 import com.google.gson.Gson;
 import com.jeremyliao.blockcommon.bean.RuntimeInfo;
+import com.jeremyliao.blockcore.exception.RemoteCallException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -100,7 +101,7 @@ public final class ApiManager {
         }
 
         @Override
-        public Object invoke(Object o, Method method, Object[] objects) {
+        public Object invoke(Object o, Method method, Object[] objects) throws RemoteCallException {
             if (!runtimeInfoMap.containsKey(module)) {
                 return null;
             }
@@ -121,10 +122,11 @@ public final class ApiManager {
                 return proxyInstance;
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
+                throw new RemoteCallException("Module not found!", e);
             } catch (Exception e) {
                 e.printStackTrace();
+                throw new RemoteCallException("Unknown error!", e);
             }
-            return null;
         }
     }
 
@@ -139,7 +141,7 @@ public final class ApiManager {
         }
 
         @Override
-        public Object invoke(Object o, Method method, Object[] objects) {
+        public Object invoke(Object o, Method method, Object[] objects) throws RemoteCallException {
             try {
                 Class implType = Class.forName(info.getImplementClassName());
                 Pair<Class<?>[], Object[]> realParameterTV = getRealParameterTypesAndValues(method, objects);
@@ -149,16 +151,20 @@ public final class ApiManager {
                 return getRealReturn(method, objReturn);
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
+                throw new RemoteCallException("Module not found!", e);
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
+                throw new RemoteCallException("No such method!", e);
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
+                throw new RemoteCallException("Unknown error!", e);
             } catch (InvocationTargetException e) {
                 e.printStackTrace();
+                throw new RemoteCallException("Unknown error!", e);
             } catch (Exception e) {
                 e.printStackTrace();
+                throw new RemoteCallException("Unknown error!", e);
             }
-            return null;
         }
 
         private Object getTarget(String module) {

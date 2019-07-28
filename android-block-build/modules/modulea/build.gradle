@@ -59,6 +59,8 @@ dependencies {
         implementation project(':block-components:blockcore')
         annotationProcessor project(':block-components:blockcompiler')
     }
+
+    implementation project(':modules:libcommon')
 }
 
 apply from: '../../upload.gradle'

@@ -3,6 +3,7 @@ include ':app'
 include ':modules:modulea'
 include ':modules:moduleb'
 include ':modules:modulec'
+include ':modules:libcommon'
 
 include ':block-components:blockbase'
 include ':block-components:blockcore'
